@@ -28,13 +28,13 @@ jobs:
       # the built `dist/` into that repo's publish branch under `statutes/`,
       # leaving everything else in that repo untouched.
       #
-      # Prerequisite: a Personal Access Token with `repo` scope on the apex
-      # repo, stored as the secret APEX_DEPLOY_TOKEN in *this* repo's
-      # settings.
+      # Auth: an ed25519 deploy key whose public half is registered (with
+      # write access) on the apex repo, and whose private half is stored as
+      # the secret APEX_DEPLOY_KEY in *this* repo's settings.
       - name: Deploy /statutes into the apex repo
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.APEX_DEPLOY_TOKEN }}
+          deploy_key: ${{ secrets.APEX_DEPLOY_KEY }}
           external_repository: rahulmatthan/rahulmatthan.github.io
           publish_branch: main
           publish_dir: ./dist
