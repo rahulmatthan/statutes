@@ -1,0 +1,215 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SectionTimeline from "../../../components/SectionTimeline.astro";
+import ActTOC from "../../../components/ActTOC.astro";
+import AmendmentPanel from "../../../components/AmendmentPanel.astro";
+import {
+  getRulesUnderSection,
+  getRegulationsUnderSection,
+  sectionIdToParam,
+} from "../../../utils/cross-references";
+import { url } from "../../../utils/url";
+
+export async function getStaticPaths() {
+  const sections = await getCollection("sections");
+  const amendments = await getCollection("amendments");
+  const amendmentLookup = new Map(amendments.map((a) => [a.id, a.data]));
+  return sections.map((entry) => ({
+    params: { section: sectionIdToParam(entry.id) },
+    props: { entry, amendmentLookup },
+  }));
+}
+
+const { entry, amendmentLookup } = Astro.props;
+const { Content } = await render(entry);
+const rules = await getRulesUnderSection(entry.data.section);
+const regulations = await getRegulationsUnderSection(entry.data.section);
+
+const history = [...entry.data.history].sort(
+  (a, b) => a.date.getTime() - b.date.getTime(),
+);
+
+const timelineEvents = history.map((h) => ({
+  date: h.date,
+  label:
+    h.by === "original"
+      ? "as enacted"
+      : (amendmentLookup.get(h.by)?.short_title ?? h.by),
+  by: h.by,
+  byHref: h.by !== "original" ? url(`/amendments/${h.by}`) : undefined,
+  kind: h.kind,
+}));
+
+const sectionNumNorm = entry.data.section.toLowerCase().replace(/\s/g, "");
+function targetMatchesWholeSection(target?: string) {
+  if (!target) return false;
+  const t = target.toLowerCase().replace(/\s/g, "");
+  return t === `section${sectionNumNorm}` || t === sectionNumNorm;
+}
+
+const wholeSubstitution = history.find(
+  (h) => h.kind === "substituted" && targetMatchesWholeSection(h.target) && h.before,
+);
+const isInsertedSection = entry.data.status === "inserted";
+
+const asEnactedDate = history[0].date.toISOString().slice(0, 10);
+const currentDate = history[history.length - 1].date.toISOString().slice(0, 10);
+
+const allSections = await getCollection("sections");
+const sortedSections = [...allSections].sort((a, b) => {
+  const am = a.data.section.match(/^(\d+)([A-Z]*)$/);
+  const bm = b.data.section.match(/^(\d+)([A-Z]*)$/);
+  const an = am ? parseInt(am[1]) : 9999;
+  const bn = bm ? parseInt(bm[1]) : 9999;
+  if (an !== bn) return an - bn;
+  return (am?.[2] ?? "").localeCompare(bm?.[2] ?? "");
+});
+const myIdx = sortedSections.findIndex((s) => s.id === entry.id);
+const prev = myIdx > 0 ? sortedSections[myIdx - 1] : null;
+const next = myIdx < sortedSections.length - 1 ? sortedSections[myIdx + 1] : null;
+
+const statusLabel: Record<string, string> = {
+  original: "as enacted",
+  amended: "amended",
+  inserted: "inserted",
+  omitted: "omitted",
+};
+---
+
+<BaseLayout
+  title={`Section ${entry.data.section} — ${entry.data.title}`}
+  description={`Aadhaar Act, 2016 — Section ${entry.data.section}: ${entry.data.title}.`}
+  wide={true}
+>
+  <div class="section-layout">
+    <ActTOC currentSectionId={entry.id} />
+
+    <article class="section-page">
+      <header class="section-header">
+        <p class="eyebrow">
+          <a href={url("/act")}>Aadhaar Act, 2016</a>
+          {entry.data.chapter && <> · {entry.data.chapter}</>}
+        </p>
+        <h1>
+          <span class="section-number">Section {entry.data.section}</span>
+          <span class="section-title-text">{entry.data.title}</span>
+        </h1>
+        <p class="section-meta">
+          <span class={`status status-${entry.data.status}`}>
+            {statusLabel[entry.data.status] ?? entry.data.status}
+          </span>
+          {entry.data.current_as_of && (
+            <span class="separator">·</span>
+            <span>
+              text as on{" "}
+              <time datetime={entry.data.current_as_of.toISOString().slice(0, 10)}>
+                {entry.data.current_as_of.toISOString().slice(0, 10)}
+              </time>
+            </span>
+          )}
+        </p>
+      </header>
+
+      {timelineEvents.length > 1 && <SectionTimeline events={timelineEvents} />}
+
+      <div
+        class="section-body-wrap"
+        data-as-enacted-date={asEnactedDate}
+        data-current-date={currentDate}
+      >
+        <div class="statute-body-container statute-body-current" data-version={currentDate}>
+          <Content />
+        </div>
+
+        {wholeSubstitution && (
+          <div
+            class="statute-body-container statute-body-historical"
+            data-version={asEnactedDate}
+            hidden
+          >
+            <div class="statute-body">
+              <p class="block lead">{wholeSubstitution.before}</p>
+            </div>
+          </div>
+        )}
+
+        {isInsertedSection && (
+          <div
+            class="statute-body-container statute-body-historical"
+            data-version={asEnactedDate}
+            hidden
+          >
+            <div class="not-yet-enacted">
+              This section did not exist as enacted in 2016. It was inserted by
+              the {history.find((h) => h.kind === "inserted")?.by ? (
+                <a href={url(`/amendments/${history.find((h) => h.kind === "inserted")?.by}`)}>amending instrument</a>
+              ) : "amending instrument"} on{" "}
+              <time datetime={history.find((h) => h.kind === "inserted")?.date.toISOString().slice(0, 10) ?? ""}>
+                {history.find((h) => h.kind === "inserted")?.date.toISOString().slice(0, 10)}
+              </time>.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {(rules.length > 0 || regulations.length > 0) && (
+        <section class="cross-ref">
+          <h2>Made under this section</h2>
+          {rules.length > 0 && (
+            <>
+              <h3>Rules</h3>
+              <ul>
+                {rules.map((r) => (
+                  <li>
+                    <a href={url(`/rules/${r.id}`)}>{r.data.title}</a>
+                    {r.data.made_under_sections.length > 1 && (
+                      <span class="ref-sections">
+                        ({r.data.made_under_sections.join(", ")})
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {regulations.length > 0 && (
+            <>
+              <h3>Regulations</h3>
+              <ul>
+                {regulations.map((r) => (
+                  <li>
+                    <a href={url(`/regulations/${r.id}`)}>{r.data.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      <nav class="section-nav" aria-label="Section navigation">
+        {prev ? (
+          <a href={url(`/act/s/${sectionIdToParam(prev.id)}`)} class="nav-prev">
+            <span class="nav-direction">← previous</span>
+            <span class="nav-label">Section {prev.data.section}</span>
+            <span class="nav-title">{prev.data.title}</span>
+          </a>
+        ) : <span></span>}
+        {next ? (
+          <a href={url(`/act/s/${sectionIdToParam(next.id)}`)} class="nav-next">
+            <span class="nav-direction">next →</span>
+            <span class="nav-label">Section {next.data.section}</span>
+            <span class="nav-title">{next.data.title}</span>
+          </a>
+        ) : <span></span>}
+      </nav>
+    </article>
+
+    <AmendmentPanel />
+  </div>
+</BaseLayout>
+
+<script>
+  import "../../../scripts/section-interactions.ts";
+</script>

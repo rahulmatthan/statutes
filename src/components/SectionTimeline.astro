@@ -1,0 +1,44 @@
+---
+interface Event {
+  date: Date;
+  label: string;
+  by?: string;
+  byHref?: string;
+  kind?: string;
+}
+
+interface Props {
+  events: Event[];
+}
+
+const { events } = Astro.props;
+const sorted = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+function isoDate(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+const lastIndex = sorted.length - 1;
+---
+
+<nav class="version-picker" aria-label="Section versions" data-default={isoDate(sorted[lastIndex].date)}>
+  <span class="version-picker-label">View as on</span>
+  <div class="version-picker-options" role="tablist">
+    {sorted.map((e, i) => (
+      <button
+        type="button"
+        role="tab"
+        class="version-pill"
+        data-version={isoDate(e.date)}
+        data-active={i === lastIndex ? "true" : "false"}
+        aria-selected={i === lastIndex ? "true" : "false"}
+        title={e.label}
+      >
+        <time datetime={isoDate(e.date)}>{isoDate(e.date)}</time>
+        <span class="version-pill-label">
+          {i === 0 ? "as enacted" : i === lastIndex ? "current" : e.kind ?? "amended"}
+        </span>
+      </button>
+    ))}
+  </div>
+</nav>

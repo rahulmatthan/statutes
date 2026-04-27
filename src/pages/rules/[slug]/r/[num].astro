@@ -1,0 +1,140 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import SetItemsTOC from "../../../../components/SetItemsTOC.astro";
+import AmendmentPanel from "../../../../components/AmendmentPanel.astro";
+import SectionTimeline from "../../../../components/SectionTimeline.astro";
+import { url } from "../../../../utils/url";
+
+export async function getStaticPaths() {
+  const items = await getCollection("ruleItems");
+  const sets = await getCollection("rules");
+  const setLookup = new Map(sets.map((r) => [r.id, r.data]));
+  return items.map((entry) => {
+    const [parentSlug, num] = entry.id.split("/");
+    return {
+      params: { slug: parentSlug, num },
+      props: { entry, parentData: setLookup.get(parentSlug) },
+    };
+  });
+}
+
+const { entry, parentData } = Astro.props;
+const { Content } = await render(entry);
+
+const parentSlug = entry.id.split("/")[0];
+const basePath = url(`/rules/${parentSlug}`);
+
+const history = [...entry.data.history].sort(
+  (a, b) => a.date.getTime() - b.date.getTime(),
+);
+
+const timelineEvents = history.map((h) => ({
+  date: h.date,
+  label: h.by === "original" ? "as enacted" : (h.by ?? "amended"),
+  by: h.by,
+  kind: h.kind,
+}));
+
+const allItems = (await getCollection("ruleItems"))
+  .filter((i) => i.id.startsWith(`${parentSlug}/`))
+  .sort((a, b) => {
+    const [aNum, aSuf] = parseKey(a.data.number);
+    const [bNum, bSuf] = parseKey(b.data.number);
+    if (aNum !== bNum) return aNum - bNum;
+    return aSuf.localeCompare(bSuf);
+  });
+
+function parseKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+
+const myIdx = allItems.findIndex((i) => i.id === entry.id);
+const prev = myIdx > 0 ? allItems[myIdx - 1] : null;
+const next = myIdx < allItems.length - 1 ? allItems[myIdx + 1] : null;
+
+const statusLabel: Record<string, string> = {
+  original: "as enacted",
+  amended: "amended",
+  inserted: "inserted",
+  omitted: "omitted",
+};
+---
+
+<BaseLayout
+  title={`Rule ${entry.data.number} — ${entry.data.title}`}
+  description={`${parentData?.title ?? "Aadhaar Rules"} — Rule ${entry.data.number}: ${entry.data.title}.`}
+  wide={true}
+>
+  <div class="section-layout">
+    <SetItemsTOC
+      parentSlug={parentSlug}
+      parentTitle={parentData?.short_title ?? parentData?.title ?? parentSlug}
+      itemKind="rule"
+      basePath={basePath}
+      currentNumber={entry.data.number}
+    />
+
+    <article class="section-page">
+      <header class="section-header">
+        <p class="eyebrow">
+          <a href={basePath}>{parentData?.title ?? parentSlug}</a>
+          {entry.data.chapter && <> · {entry.data.chapter}</>}
+        </p>
+        <h1>
+          <span class="section-number">Rule {entry.data.number}</span>
+          <span class="section-title-text">{entry.data.title}</span>
+        </h1>
+        <p class="section-meta">
+          <span class={`status status-${entry.data.status}`}>
+            {statusLabel[entry.data.status] ?? entry.data.status}
+          </span>
+          {parentData?.gazette_date && (
+            <>
+              <span class="separator">·</span>
+              <span>
+                gazette{" "}
+                <time datetime={parentData.gazette_date.toISOString().slice(0, 10)}>
+                  {parentData.gazette_date.toISOString().slice(0, 10)}
+                </time>
+              </span>
+            </>
+          )}
+        </p>
+      </header>
+
+      {timelineEvents.length > 1 && <SectionTimeline events={timelineEvents} />}
+
+      <div class="section-body-wrap">
+        <div class="statute-body-container statute-body-current">
+          <Content />
+        </div>
+      </div>
+
+      <nav class="section-nav" aria-label="Rule navigation">
+        {prev ? (
+          <a href={`${basePath}/r/${prev.data.number.toLowerCase()}`} class="nav-prev">
+            <span class="nav-direction">← previous</span>
+            <span class="nav-label">Rule {prev.data.number}</span>
+            <span class="nav-title">{prev.data.title}</span>
+          </a>
+        ) : <span></span>}
+        {next ? (
+          <a href={`${basePath}/r/${next.data.number.toLowerCase()}`} class="nav-next">
+            <span class="nav-direction">next →</span>
+            <span class="nav-label">Rule {next.data.number}</span>
+            <span class="nav-title">{next.data.title}</span>
+          </a>
+        ) : <span></span>}
+      </nav>
+    </article>
+
+    <AmendmentPanel />
+  </div>
+</BaseLayout>
+
+<script>
+  import "../../../../scripts/section-interactions.ts";
+</script>

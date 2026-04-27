@@ -1,0 +1,97 @@
+---
+import { getCollection } from "astro:content";
+
+interface Props {
+  parentSlug: string;
+  parentTitle: string;
+  itemKind: "regulation" | "rule";
+  basePath: string;          // e.g., "/regulations/enrolment-and-update-2016"
+  currentNumber?: string;
+}
+
+const { parentSlug, parentTitle, itemKind, basePath, currentNumber } = Astro.props;
+
+const collection = itemKind === "regulation" ? "regulationItems" : "ruleItems";
+const allItems = await getCollection(collection);
+
+const items = allItems
+  .filter((i) => i.id.startsWith(`${parentSlug}/`))
+  .sort((a, b) => {
+    const na = parseSortKey(a.data.number);
+    const nb = parseSortKey(b.data.number);
+    if (na[0] !== nb[0]) return na[0] - nb[0];
+    return na[1].localeCompare(nb[1]);
+  });
+
+function parseSortKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+
+const groups = new Map<string, typeof items>();
+for (const it of items) {
+  const ch = it.data.chapter ?? "";
+  const arr = groups.get(ch) ?? [];
+  arr.push(it);
+  groups.set(ch, arr);
+}
+const groupsArr = [...groups.entries()];
+const hasChapters = groupsArr.length > 1 || (groupsArr.length === 1 && groupsArr[0][0] !== "");
+---
+
+<aside class="act-toc" aria-label={`${itemKind} navigation`}>
+  <header class="rail-header">
+    <a href={basePath} class="rail-back-to-set">
+      <span aria-hidden="true">←</span>
+      <span class="rail-title">Back to set</span>
+    </a>
+    <span class="rail-count">{items.length}</span>
+  </header>
+  <p class="rail-subtitle">{parentTitle}</p>
+  <nav class="rail-toc-nav">
+    {hasChapters
+      ? groupsArr.map(([chapter, list]) => (
+          <details class="rail-chapter" open={list.some((i) => i.data.number === currentNumber)}>
+            <summary>{chapter || "Unassigned"}</summary>
+            <ul>
+              {list.map((it) => (
+                <li>
+                  <a
+                    href={`${basePath}/r/${it.data.number.toLowerCase()}`}
+                    class={`rail-section-link ${it.data.number === currentNumber ? "is-current" : ""}`}
+                    aria-current={it.data.number === currentNumber ? "page" : undefined}
+                  >
+                    <span class="rail-sec-num">{it.data.number}.</span>
+                    <span class="rail-sec-title">{it.data.title}</span>
+                    {it.data.status === "amended" && <span class="rail-sec-flag amended">·</span>}
+                    {it.data.status === "inserted" && <span class="rail-sec-flag inserted">+</span>}
+                    {it.data.status === "omitted" && <span class="rail-sec-flag omitted">×</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))
+      : (
+        <ul class="rail-flat-list">
+          {items.map((it) => (
+            <li>
+              <a
+                href={`${basePath}/r/${it.data.number.toLowerCase()}`}
+                class={`rail-section-link ${it.data.number === currentNumber ? "is-current" : ""}`}
+                aria-current={it.data.number === currentNumber ? "page" : undefined}
+              >
+                <span class="rail-sec-num">{it.data.number}.</span>
+                <span class="rail-sec-title">{it.data.title}</span>
+                {it.data.status === "amended" && <span class="rail-sec-flag amended">·</span>}
+                {it.data.status === "inserted" && <span class="rail-sec-flag inserted">+</span>}
+                {it.data.status === "omitted" && <span class="rail-sec-flag omitted">×</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </nav>
+</aside>

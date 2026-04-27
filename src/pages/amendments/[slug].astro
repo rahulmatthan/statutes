@@ -1,0 +1,63 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { sectionIdToParam } from "../../utils/cross-references";
+import { url } from "../../utils/url";
+
+export async function getStaticPaths() {
+  const amendments = await getCollection("amendments");
+  return amendments.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const sections = await getCollection("sections");
+const touched = sections
+  .filter((s) => s.data.history.some((h) => h.by === entry.id))
+  .sort((a, b) => {
+    const na = parseInt(a.data.section);
+    const nb = parseInt(b.data.section);
+    return na - nb;
+  });
+---
+
+<BaseLayout title={entry.data.title}>
+  <article class="statute-prose">
+    <p class="eyebrow">Amending instrument · {entry.data.kind}</p>
+    <h1>{entry.data.title}</h1>
+    <p class="metadata" style="color:var(--color-ink-faint);">
+      <time datetime={entry.data.date.toISOString().slice(0, 10)}>
+        {entry.data.date.toISOString().slice(0, 10)}
+      </time>
+      · <a href={entry.data.source_pdf_url}>Source PDF</a>
+    </p>
+
+    <Content />
+
+    {touched.length > 0 && (
+      <section class="cross-ref">
+        <h2>Sections affected</h2>
+        <ul>
+          {touched.map((s) => {
+            const change = s.data.history.find((h) => h.by === entry.id);
+            return (
+              <li>
+                <a href={url(`/act/s/${sectionIdToParam(s.id)}`)}>
+                  Section {s.data.section} — {s.data.title}
+                </a>
+                {change && (
+                  <span class="metadata" style="color:var(--color-ink-faint); font-size:0.8rem;">
+                    {" "}— {change.kind}{change.target ? ` (${change.target})` : ""}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+  </article>
+</BaseLayout>

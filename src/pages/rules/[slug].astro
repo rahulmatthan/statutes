@@ -1,0 +1,81 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { sectionIdToParam } from "../../utils/cross-references";
+import { url } from "../../utils/url";
+
+export async function getStaticPaths() {
+  const rules = await getCollection("rules");
+  return rules.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+
+const items = (await getCollection("ruleItems"))
+  .filter((i) => i.id.startsWith(`${entry.id}/`))
+  .sort((a, b) => {
+    const [an, as] = parseKey(a.data.number);
+    const [bn, bs] = parseKey(b.data.number);
+    if (an !== bn) return an - bn;
+    return as.localeCompare(bs);
+  });
+
+function parseKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+---
+
+<BaseLayout title={entry.data.title}>
+  <article class="statute-prose">
+    <p class="eyebrow"><a href={url("/rules")}>Central Government Rules</a></p>
+    <h1>{entry.data.title}</h1>
+    <p class="metadata">
+      <time datetime={entry.data.gazette_date.toISOString().slice(0, 10)}>
+        {entry.data.gazette_date.toISOString().slice(0, 10)}
+      </time>
+      · <a href={entry.data.source_pdf_url}>Source PDF</a>
+      · {items.length} rule{items.length === 1 ? "" : "s"}
+    </p>
+
+    {entry.data.made_under_sections.length > 0 && (
+      <p class="metadata">
+        Made under section{entry.data.made_under_sections.length > 1 ? "s" : ""}:{" "}
+        {entry.data.made_under_sections.map((s, i) => {
+          const base = s.split("(")[0];
+          return (
+            <>
+              {i > 0 && ", "}
+              <a href={url(`/act/s/${sectionIdToParam("s-" + base.toLowerCase())}`)}>{s}</a>
+            </>
+          );
+        })}
+      </p>
+    )}
+
+    <h2>Arrangement of rules</h2>
+    {items.length === 0 ? (
+      <p>No rules have been ingested yet.</p>
+    ) : (
+      <ul style="list-style:none; padding:0;">
+        {items.map((it) => (
+          <li style="display:grid; grid-template-columns:3rem 1fr auto; gap:0.85rem; padding:0.32rem 0; align-items:baseline;">
+            <span class="sec-num" style="font-family:var(--font-sans); font-size:0.82rem; color:var(--color-ink-faint); font-variant-numeric:tabular-nums;">
+              {it.data.number}.
+            </span>
+            <span>
+              <a href={url(`/rules/${entry.id}/r/${it.data.number.toLowerCase()}`)}>{it.data.title}</a>
+            </span>
+            {it.data.status !== "original" && (
+              <span class={`sec-status ${it.data.status}`}>{it.data.status}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    )}
+  </article>
+</BaseLayout>

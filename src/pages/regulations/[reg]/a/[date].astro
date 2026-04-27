@@ -1,0 +1,60 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import AmendmentBlock from "../../../../components/AmendmentBlock.astro";
+import { url } from "../../../../utils/url";
+
+export async function getStaticPaths() {
+  const amendments = await getCollection("regulationAmendments");
+  return amendments.map((entry) => {
+    const [parent] = entry.id.split("/");
+    return {
+      params: {
+        reg: parent,
+        date: entry.data.gazette_date.toISOString().slice(0, 10),
+      },
+      props: { entry },
+    };
+  });
+}
+
+const { entry } = Astro.props;
+const [parentSlug] = entry.id.split("/");
+const { Content } = await render(entry);
+const regs = await getCollection("regulations");
+const parent = regs.find((r) => r.id === parentSlug);
+---
+
+<BaseLayout title={entry.data.title}>
+  <article class="statute-prose">
+    <p class="eyebrow">Amending regulation</p>
+    <h1>{entry.data.title}</h1>
+    <p class="metadata" style="color:var(--color-ink-faint);">
+      <time datetime={entry.data.gazette_date.toISOString().slice(0, 10)}>
+        {entry.data.gazette_date.toISOString().slice(0, 10)}
+      </time>
+      · <a href={entry.data.source_pdf_url}>Source PDF</a>
+      {parent && <> · amends <a href={url(`/regulations/${parent.id}`)}>{parent.data.title}</a></>}
+    </p>
+
+    <Content />
+
+    {entry.data.changes.length > 0 && (
+      <>
+        <h2>Changes</h2>
+        {entry.data.changes.map((c) => (
+          <AmendmentBlock
+            date={entry.data.gazette_date}
+            kind={c.kind}
+            by={entry.id}
+            byTitle={entry.data.title}
+            target={c.target}
+            note={c.note}
+            before={c.before}
+            after={c.after}
+          />
+        ))}
+      </>
+    )}
+  </article>
+</BaseLayout>

@@ -1,0 +1,210 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import SetItemsTOC from "../../../../components/SetItemsTOC.astro";
+import AmendmentPanel from "../../../../components/AmendmentPanel.astro";
+import SectionTimeline from "../../../../components/SectionTimeline.astro";
+import { url } from "../../../../utils/url";
+
+export async function getStaticPaths() {
+  const items = await getCollection("regulationItems");
+  const regs = await getCollection("regulations");
+  const setLookup = new Map(regs.map((r) => [r.id, r.data]));
+  const originals = await getCollection("regulationItemsOriginal");
+  const originalLookup = new Map(originals.map((o) => [o.id, o]));
+  return items.map((entry) => {
+    const [parentSlug, num] = entry.id.split("/");
+    return {
+      params: { reg: parentSlug, num },
+      props: {
+        entry,
+        parentData: setLookup.get(parentSlug),
+        original: originalLookup.get(entry.id) ?? null,
+      },
+    };
+  });
+}
+
+const { entry, parentData, original } = Astro.props;
+const { Content } = await render(entry);
+const OriginalContent = original ? (await render(original)).Content : null;
+
+const parentSlug = entry.id.split("/")[0];
+const basePath = url(`/regulations/${parentSlug}`);
+
+const history = [...entry.data.history].sort(
+  (a, b) => a.date.getTime() - b.date.getTime(),
+);
+
+const timelineEvents = history.map((h) => ({
+  date: h.date,
+  label: h.by === "original" ? "as enacted" : (h.by ?? "amended"),
+  by: h.by,
+  kind: h.kind,
+}));
+
+// If we have an archived original AND the current entry has been amended,
+// expose the as-enacted body as a hidden historical body the timeline can
+// switch to. The "current" pill is the latest history date; the "as enacted"
+// pill is the earliest (gazette) date.
+const hasOriginalSnapshot = !!original;
+const asEnactedDate = history[0]?.date.toISOString().slice(0, 10) ?? "";
+const currentDate = history[history.length - 1]?.date.toISOString().slice(0, 10) ?? "";
+
+// Prev / next within set.
+const allItems = (await getCollection("regulationItems"))
+  .filter((i) => i.id.startsWith(`${parentSlug}/`))
+  .sort((a, b) => {
+    const [aNum, aSuf] = parseKey(a.data.number);
+    const [bNum, bSuf] = parseKey(b.data.number);
+    if (aNum !== bNum) return aNum - bNum;
+    return aSuf.localeCompare(bSuf);
+  });
+
+function parseKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+
+const myIdx = allItems.findIndex((i) => i.id === entry.id);
+const prev = myIdx > 0 ? allItems[myIdx - 1] : null;
+const next = myIdx < allItems.length - 1 ? allItems[myIdx + 1] : null;
+
+const statusLabel: Record<string, string> = {
+  original: "as enacted",
+  amended: "amended",
+  inserted: "inserted",
+  omitted: "omitted",
+};
+---
+
+<BaseLayout
+  title={`Regulation ${entry.data.number} — ${entry.data.title}`}
+  description={`${parentData?.title ?? "Aadhaar Regulations"} — Regulation ${entry.data.number}: ${entry.data.title}.`}
+  wide={true}
+>
+  <div class="section-layout">
+    <SetItemsTOC
+      parentSlug={parentSlug}
+      parentTitle={parentData?.title ?? parentSlug}
+      itemKind="regulation"
+      basePath={basePath}
+      currentNumber={entry.data.number}
+    />
+
+    <article class="section-page">
+      <header class="section-header">
+        <p class="eyebrow">
+          <a href={basePath}>{parentData?.title ?? parentSlug}</a>
+          {entry.data.chapter && <> · {entry.data.chapter}</>}
+        </p>
+        <h1>
+          <span class="section-number">Regulation {entry.data.number}</span>
+          <span class="section-title-text">{entry.data.title}</span>
+        </h1>
+        <p class="section-meta">
+          <span class={`status status-${entry.data.status}`}>
+            {statusLabel[entry.data.status] ?? entry.data.status}
+          </span>
+          {parentData?.gazette_date && (
+            <>
+              <span class="separator">·</span>
+              <span>
+                gazette{" "}
+                <time datetime={parentData.gazette_date.toISOString().slice(0, 10)}>
+                  {parentData.gazette_date.toISOString().slice(0, 10)}
+                </time>
+              </span>
+            </>
+          )}
+        </p>
+      </header>
+
+      {timelineEvents.length > 1 && <SectionTimeline events={timelineEvents} />}
+
+      <div
+        class="section-body-wrap"
+        data-as-enacted-date={asEnactedDate}
+        data-current-date={currentDate}
+      >
+        <div class="statute-body-container statute-body-current" data-version={currentDate}>
+          <Content />
+        </div>
+
+        {hasOriginalSnapshot && OriginalContent ? (
+          <div
+            class="statute-body-container statute-body-historical"
+            data-version={asEnactedDate}
+            hidden
+          >
+            <p class="historical-source-note">
+              Source: <a href={parentData?.original_pdf_url} rel="external">
+                Wayback Machine snapshot
+              </a> of UIDAI's original publication.
+            </p>
+            <OriginalContent />
+          </div>
+        ) : entry.data.status === "inserted" ? (
+          <div
+            class="statute-body-container statute-body-historical"
+            data-version={asEnactedDate}
+            hidden
+          >
+            <div class="not-yet-enacted">
+              This regulation did not exist as enacted on{" "}
+              <time datetime={asEnactedDate}>{asEnactedDate}</time>.
+              It was inserted by{" "}
+              {history.find((h) => h.kind === "inserted") ? (
+                <a href={url(`/regulations/${parentSlug}/a/${history.find((h) => h.kind === "inserted")?.date.toISOString().slice(0, 10)}`)}>
+                  the {history.find((h) => h.kind === "inserted")?.date.toISOString().slice(0, 10)} amendment
+                </a>
+              ) : "a later amendment"}.
+            </div>
+          </div>
+        ) : timelineEvents.length > 1 ? (
+          <div
+            class="statute-body-container statute-body-historical"
+            data-version={asEnactedDate}
+            hidden
+          >
+            <div class="not-yet-enacted">
+              We do not have an archived as-enacted snapshot of this regulation.
+              The current text shown is post-amendment. To see the original text,
+              consult the{" "}
+              {parentData?.original_pdf_url ? (
+                <a href={parentData.original_pdf_url} rel="external">
+                  earliest archived PDF
+                </a>
+              ) : "Gazette of India"}{" "}
+              directly.
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <nav class="section-nav" aria-label="Regulation navigation">
+        {prev ? (
+          <a href={`${basePath}/r/${prev.data.number.toLowerCase()}`} class="nav-prev">
+            <span class="nav-direction">← previous</span>
+            <span class="nav-label">Regulation {prev.data.number}</span>
+            <span class="nav-title">{prev.data.title}</span>
+          </a>
+        ) : <span></span>}
+        {next ? (
+          <a href={`${basePath}/r/${next.data.number.toLowerCase()}`} class="nav-next">
+            <span class="nav-direction">next →</span>
+            <span class="nav-label">Regulation {next.data.number}</span>
+            <span class="nav-title">{next.data.title}</span>
+          </a>
+        ) : <span></span>}
+      </nav>
+    </article>
+
+    <AmendmentPanel />
+  </div>
+</BaseLayout>
+
+<script>
+  import "../../../../scripts/section-interactions.ts";
+</script>

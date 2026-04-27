@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { url } from "../../utils/url";
+
+const regulations = (await getCollection("regulations")).sort(
+  (a, b) => b.data.gazette_date.getTime() - a.data.gazette_date.getTime(),
+);
+const amendments = await getCollection("regulationAmendments");
+const counts = new Map<string, number>();
+for (const a of amendments) {
+  counts.set(a.data.parent.id, (counts.get(a.data.parent.id) ?? 0) + 1);
+}
+---
+
+<BaseLayout title="Regulations">
+  <article class="statute-prose">
+    <p class="eyebrow">Made by UIDAI under section 54</p>
+    <h1>Regulations</h1>
+    {regulations.length === 0 ? (
+      <p>No regulations ingested yet.</p>
+    ) : (
+      <ul style="list-style:none; padding:0;">
+        {regulations.map((r) => {
+          const n = counts.get(r.id) ?? 0;
+          return (
+            <li style="padding:0.6rem 0; border-bottom:1px solid var(--color-rule);">
+              <div>
+                <a href={url(`/regulations/${r.id}`)}>{r.data.title}</a>
+                {n > 0 && (
+                  <span class="metadata" style="font-size:0.78rem; color:var(--color-amend); margin-left:0.5rem;">
+                    {n} amendment{n === 1 ? "" : "s"}
+                  </span>
+                )}
+              </div>
+              <div class="metadata" style="font-size:0.8rem; color:var(--color-ink-faint);">
+                <time datetime={r.data.gazette_date.toISOString().slice(0, 10)}>
+                  {r.data.gazette_date.toISOString().slice(0, 10)}
+                </time>
+                {r.data.made_under_sections.length > 0 && (
+                  <span> · made under s. {r.data.made_under_sections.join(", ")}</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    )}
+  </article>
+</BaseLayout>

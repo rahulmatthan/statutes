@@ -1,0 +1,59 @@
+---
+// Right-column amendment panel. Default state shows a hint; populated by
+// section-interactions.ts when an amendment indicator is clicked.
+---
+
+<aside class="amend-panel" aria-label="Amendment details" data-state="empty">
+  <div class="amend-panel-empty">
+    <header class="rail-header">
+      <span class="rail-title">Amendments</span>
+    </header>
+    <p class="amend-panel-hint">
+      Click any highlighted phrase in the text to see what changed,
+      when, and what it said before.
+    </p>
+    <p class="amend-panel-legend">
+      <span class="legend-item">
+        <span class="legend-marker amend-legend-inline"></span>
+        <span>highlighted text was edited</span>
+      </span>
+      <span class="legend-item">
+        <span class="legend-marker amend-legend-block"></span>
+        <span>full sub-section inserted or replaced</span>
+      </span>
+    </p>
+  </div>
+
+  <div class="amend-panel-detail">
+    <header class="rail-header">
+      <span class="rail-title">Amendment</span>
+      <button type="button" class="amend-panel-close" aria-label="Clear amendment selection">×</button>
+    </header>
+    <div class="amend-panel-content">
+      <p class="amend-panel-eyebrow">
+        <span class="amend-panel-kind"></span>
+        <span class="amend-panel-date-wrap">
+          on <time class="amend-panel-date"></time>
+        </span>
+      </p>
+      <p class="amend-panel-by"></p>
+      <p class="amend-panel-target" hidden></p>
+
+      <section class="amend-panel-block amend-panel-before-block" hidden>
+        <h4>Before</h4>
+        <blockquote class="amend-panel-before"></blockquote>
+      </section>
+
+      <section class="amend-panel-block amend-panel-after-block" hidden>
+        <h4>After</h4>
+        <blockquote class="amend-panel-after"></blockquote>
+      </section>
+
+      <p class="amend-panel-note" hidden></p>
+
+      <p class="amend-panel-link-wrap">
+        <a class="amend-panel-link" href="#">View amending instrument →</a>
+      </p>
+    </div>
+  </div>
+</aside>

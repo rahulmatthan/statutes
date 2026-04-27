@@ -1,0 +1,39 @@
+---
+interface Event {
+  date: Date;
+  label: string;
+  active?: boolean;
+  amend?: boolean;
+}
+
+interface Props {
+  events: Event[];
+}
+
+const { events } = Astro.props;
+const sorted = [...events].sort((a, b) => a.date.getTime() - b.date.getTime());
+---
+
+<div class="timeline" aria-label="Provision timeline">
+  {sorted.map((e, i) => (
+    <>
+      <span
+        class:list={[
+          "timeline-dot",
+          e.active && "active",
+          e.amend && "amend",
+        ]}
+        title={`${e.date.toISOString().slice(0, 10)} — ${e.label}`}
+      ></span>
+      <span>
+        <time datetime={e.date.toISOString().slice(0, 10)}>
+          {e.date.toISOString().slice(0, 10)}
+        </time>
+        <span class="text-[var(--color-ink-soft)]"> — {e.label}</span>
+      </span>
+      {i < sorted.length - 1 && (
+        <span class="text-[var(--color-ink-faint)]">·</span>
+      )}
+    </>
+  ))}
+</div>

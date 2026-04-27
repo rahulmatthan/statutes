@@ -1,0 +1,36 @@
+{
+  "name": "statutes",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview",
+    "astro": "astro",
+    "ingest:act": "python3 scripts/parse_act.py",
+    "ingest:regs": "python3 scripts/parse_regulations.py",
+    "ingest:reg-amends": "python3 scripts/parse_regulation_amendments.py",
+    "ingest": "npm run ingest:act && npm run ingest:regs && npm run ingest:reg-amends"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^5.0.4",
+    "@astrojs/react": "^5.0.4",
+    "@astrojs/sitemap": "^3.7.2",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^6.1.9",
+    "diff": "^9.0.0",
+    "pagefind": "^1.5.2",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2",
+    "puppeteer": "^24.42.0"
+  }
+}

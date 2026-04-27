@@ -1,0 +1,62 @@
+---
+import { getCollection } from "astro:content";
+import { url } from "../utils/url";
+
+interface Props {
+  currentId: string;
+}
+
+const { currentId } = Astro.props;
+const regulations = (await getCollection("regulations")).sort(
+  (a, b) => a.data.title.localeCompare(b.data.title),
+);
+const rules = (await getCollection("rules")).sort(
+  (a, b) => a.data.title.localeCompare(b.data.title),
+);
+---
+
+<aside class="act-toc" aria-label="Subordinate legislation navigation">
+  <header class="rail-header">
+    <span class="rail-title">Regulations</span>
+    <span class="rail-count">{regulations.length}</span>
+  </header>
+  <nav class="rail-toc-nav">
+    <ul class="rail-flat-list">
+      {regulations.map((r) => (
+        <li>
+          <a
+            href={url(`/regulations/${r.id}`)}
+            class={`rail-section-link ${r.id === currentId ? "is-current" : ""}`}
+            aria-current={r.id === currentId ? "page" : undefined}
+          >
+            <span class="rail-sec-title">
+              {r.data.short_title ?? r.data.title.replace(/^(?:The\s+|Aadhaar\s+\(|Unique Identification Authority of India\s+\()?/, "")}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <header class="rail-header" style="margin-top:1.5rem;">
+    <span class="rail-title">Rules</span>
+    <span class="rail-count">{rules.length}</span>
+  </header>
+  <nav class="rail-toc-nav">
+    <ul class="rail-flat-list">
+      {rules.map((r) => (
+        <li>
+          <a
+            href={url(`/rules/${r.id}`)}
+            class={`rail-section-link ${r.id === currentId ? "is-current" : ""}`}
+            aria-current={r.id === currentId ? "page" : undefined}
+          >
+            <span class="rail-sec-title">
+              {r.data.short_title ?? r.data.title}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</aside>

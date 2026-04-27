@@ -1,0 +1,70 @@
+---
+import { getCollection } from "astro:content";
+import { sectionIdToParam } from "../utils/cross-references";
+import { url } from "../utils/url";
+
+interface Props {
+  currentSectionId: string;
+}
+
+const { currentSectionId } = Astro.props;
+const sections = await getCollection("sections");
+
+function sectionSortKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+
+const sorted = [...sections].sort((a, b) => {
+  const [na, sa] = sectionSortKey(a.data.section);
+  const [nb, sb] = sectionSortKey(b.data.section);
+  if (na !== nb) return na - nb;
+  return sa.localeCompare(sb);
+});
+
+const groups = new Map<string, typeof sorted>();
+for (const s of sorted) {
+  const ch = s.data.chapter ?? "Unassigned";
+  const arr = groups.get(ch) ?? [];
+  arr.push(s);
+  groups.set(ch, arr);
+}
+
+const groupsArr = [...groups.entries()].sort((a, b) => {
+  const oa = a[1][0]?.data.chapter_order ?? 999;
+  const ob = b[1][0]?.data.chapter_order ?? 999;
+  return oa - ob;
+});
+---
+
+<aside class="act-toc" aria-label="Section navigation">
+  <header class="rail-header">
+    <span class="rail-title">Sections</span>
+    <span class="rail-count">{sections.length}</span>
+  </header>
+  <nav class="rail-toc-nav">
+    {groupsArr.map(([chapter, items]) => (
+      <details class="rail-chapter" open={items.some((s) => s.id === currentSectionId)}>
+        <summary>{chapter}</summary>
+        <ul>
+          {items.map((s) => (
+            <li>
+              <a
+                href={url(`/act/s/${sectionIdToParam(s.id)}`)}
+                class={`rail-section-link ${s.id === currentSectionId ? "is-current" : ""}`}
+                aria-current={s.id === currentSectionId ? "page" : undefined}
+              >
+                <span class="rail-sec-num">s.{s.data.section}</span>
+                <span class="rail-sec-title">{s.data.title}</span>
+                {s.data.status === "amended" && <span class="rail-sec-flag amended" title="amended">·</span>}
+                {s.data.status === "inserted" && <span class="rail-sec-flag inserted" title="inserted">+</span>}
+                {s.data.status === "omitted" && <span class="rail-sec-flag omitted" title="omitted">×</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    ))}
+  </nav>
+</aside>

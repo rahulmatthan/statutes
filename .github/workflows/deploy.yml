@@ -1,0 +1,45 @@
+name: Build and deploy to exmachina.in/statutes
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # The apex domain (exmachina.in) is served by a separate repo. We push
+      # the built `dist/` into that repo's publish branch under `statutes/`,
+      # leaving everything else in that repo untouched.
+      #
+      # Prerequisite: a Personal Access Token with `repo` scope on the apex
+      # repo, stored as the secret APEX_DEPLOY_TOKEN in *this* repo's
+      # settings.
+      - name: Deploy /statutes into the apex repo
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.APEX_DEPLOY_TOKEN }}
+          external_repository: rahulmatthan/rahulmatthan.github.io
+          publish_branch: main
+          publish_dir: ./dist
+          destination_dir: statutes
+          keep_files: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy statutes from ${{ github.sha }}'

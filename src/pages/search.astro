@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { url } from "../utils/url";
+---
+
+<BaseLayout title="Search">
+  <article class="statute-prose">
+    <h1>Search</h1>
+    <p>Full-text search across the Act, amendments, rules, and regulations.</p>
+    <div id="search"></div>
+  </article>
+  <link rel="stylesheet" href={url("/pagefind/pagefind-ui.css")} />
+  <script is:inline define:vars={{ pagefindBase: url("/pagefind/") }} src={url("/pagefind/pagefind-ui.js")}></script>
+  <script is:inline define:vars={{ pagefindBase: url("/pagefind/") }}>
+    window.addEventListener("DOMContentLoaded", () => {
+      // Pagefind UI is global once the script loads
+      // eslint-disable-next-line no-undef
+      new PagefindUI({
+        element: "#search",
+        showImages: false,
+        bundlePath: pagefindBase,
+      });
+    });
+  </script>
+</BaseLayout>

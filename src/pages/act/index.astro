@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { sectionIdToParam } from "../../utils/cross-references";
+import { url } from "../../utils/url";
+
+const sections = await getCollection("sections");
+
+function sectionSortKey(s: string): [number, string] {
+  const m = s.match(/^([0-9]+)([A-Za-z]*)$/);
+  if (!m) return [9999, s];
+  return [parseInt(m[1], 10), m[2] || ""];
+}
+
+const sorted = [...sections].sort((a, b) => {
+  const [na, sa] = sectionSortKey(a.data.section);
+  const [nb, sb] = sectionSortKey(b.data.section);
+  if (na !== nb) return na - nb;
+  return sa.localeCompare(sb);
+});
+
+const groups = new Map<string, typeof sorted>();
+for (const s of sorted) {
+  const ch = s.data.chapter ?? "Unassigned";
+  const arr = groups.get(ch) ?? [];
+  arr.push(s);
+  groups.set(ch, arr);
+}
+
+const groupsArr = [...groups.entries()].sort((a, b) => {
+  const oa = a[1][0]?.data.chapter_order ?? 999;
+  const ob = b[1][0]?.data.chapter_order ?? 999;
+  return oa - ob;
+});
+---
+
+<BaseLayout title="Arrangement of Sections">
+  <article class="arrangement">
+    <p class="eyebrow">Aadhaar Act, 2016</p>
+    <h1 class="text-2xl font-semibold mb-1" style="font-family: var(--font-serif); letter-spacing:-0.012em;">Arrangement of Sections</h1>
+    <p class="metadata text-sm" style="font-family: var(--font-sans); color: var(--color-ink-faint); margin: 0 0 1.5rem;">
+      {sections.length} sections, grouped by chapter.
+    </p>
+    {sections.length === 0 ? (
+      <p>No sections ingested yet.</p>
+    ) : (
+      groupsArr.map(([chapter, items]) => (
+        <section class="arrangement-chapter">
+          <h2>{chapter}</h2>
+          <ul>
+            {items.map((s) => (
+              <li>
+                <span class="sec-num">s. {s.data.section}</span>
+                <span class="sec-title">
+                  <a href={url(`/act/s/${sectionIdToParam(s.id)}`)}>{s.data.title}</a>
+                </span>
+                {s.data.status !== "original" && (
+                  <span class={`sec-status ${s.data.status}`}>{s.data.status}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    )}
+  </article>
+</BaseLayout>

@@ -1,0 +1,47 @@
+---
+interface Props {
+  date: Date;
+  kind: string;
+  by: string;
+  byTitle?: string;
+  byHref?: string;
+  target?: string;
+  note?: string;
+  before?: string;
+  after?: string;
+  anchorId?: string;
+}
+
+const { date, kind, by, byTitle, byHref, target, note, before, after, anchorId } =
+  Astro.props;
+
+const dateStr = date.toISOString().slice(0, 10);
+const id = anchorId ?? `history-${dateStr}`;
+---
+
+<section class="amend-block" id={id}>
+  <div class="amend-header flex items-center justify-between gap-2 flex-wrap">
+    <span>
+      <time datetime={dateStr}>{dateStr}</time>
+      &middot;
+      <span>{kind}</span>
+      {target && <span class="text-[var(--color-ink-soft)]">— {target}</span>}
+    </span>
+    <span class="text-[var(--color-ink-faint)]">
+      {byHref ? <a href={byHref}>{byTitle ?? by}</a> : (byTitle ?? by)}
+    </span>
+  </div>
+  {note && <p class="text-sm text-[var(--color-ink-soft)] mt-1 mb-2">{note}</p>}
+  {before && (
+    <div>
+      <div class="amend-label">Before</div>
+      <blockquote class="amend-before"><p>{before}</p></blockquote>
+    </div>
+  )}
+  {after && (
+    <div>
+      <div class="amend-label">After</div>
+      <blockquote class="amend-after"><p>{after}</p></blockquote>
+    </div>
+  )}
+</section>

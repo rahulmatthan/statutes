@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { url } from "../utils/url";
+
+const sections = await getCollection("sections");
+const amendments = await getCollection("amendments");
+const rules = await getCollection("rules");
+const regulations = await getCollection("regulations");
+---
+
+<BaseLayout
+  title="Aadhaar Statutes"
+  description="The Aadhaar Act, 2016 with verbatim amendment history and links to the rules and regulations made under each section."
+>
+  <article class="statute-prose">
+    <p class="eyebrow">Aadhaar Act, 2016</p>
+    <h1>The Aadhaar Act, its amendments, rules, and regulations — navigable.</h1>
+    <p>
+      A repository for the Aadhaar (Targeted Delivery of Financial and Other
+      Subsidies, Benefits and Services) Act, 2016. Each section shows its current
+      text, every amendment with the verbatim language before and after, and the
+      rules and regulations made under it.
+    </p>
+
+    <h2>Browse</h2>
+    <ul>
+      <li><a href={url("/act")}>Arrangement of Sections</a> — {sections.length} sections</li>
+      <li><a href={url("/amendments")}>Amending Acts and Ordinances</a> — {amendments.length}</li>
+      <li><a href={url("/rules")}>Rules</a> — {rules.length} (Central Government, under s.55)</li>
+      <li><a href={url("/regulations")}>Regulations</a> — {regulations.length} (UIDAI, under s.54)</li>
+      <li><a href={url("/search")}>Search</a></li>
+    </ul>
+
+    <h2>What this is</h2>
+    <p>
+      UIDAI publishes the Act and its subordinate legislation as PDFs only. This
+      site is a structured, cross-referenced edition of those PDFs, modelled on
+      <a href="https://www.legislation.gov.uk/">legislation.gov.uk</a>.
+    </p>
+  </article>
+</BaseLayout>

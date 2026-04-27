@@ -1,0 +1,1354 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------- */
+/* Fonts — loaded from Google Fonts; fall back to system serif      */
+/* ---------------------------------------------------------------- */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-serif: "Source Serif 4", "Source Serif Pro", Georgia, "Iowan Old Style",
+    "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Page palette ------------------------------------------------- */
+  --color-paper: oklch(0.985 0.005 90);
+  --color-paper-warm: oklch(0.97 0.012 80);
+  --color-ink: oklch(0.21 0.012 250);
+  --color-ink-soft: oklch(0.40 0.012 250);
+  --color-ink-faint: oklch(0.58 0.012 250);
+  --color-rule: oklch(0.88 0.008 250);
+  --color-rule-soft: oklch(0.94 0.006 250);
+
+  /* Accent (primary action) ------------------------------------- */
+  --color-accent: oklch(0.45 0.13 250);
+  --color-accent-soft: oklch(0.93 0.045 250);
+
+  /* Amendment indicators ---------------------------------------- */
+  --color-amend: oklch(0.55 0.16 60);
+  --color-amend-soft: oklch(0.93 0.07 75);
+  --color-amend-very-soft: oklch(0.97 0.04 75);
+  --color-omit: oklch(0.55 0.05 20);
+  --color-omit-soft: oklch(0.93 0.018 20);
+
+  /* Quote / blockquote backgrounds ----------------------------- */
+  --color-quote-bg: oklch(0.965 0.008 250);
+  --color-quote-bg-warm: oklch(0.97 0.025 75);
+}
+
+/* ---------------------------------------------------------------- */
+/* Base                                                              */
+/* ---------------------------------------------------------------- */
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-serif);
+  font-feature-settings: "kern", "liga", "onum";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-size: 17px;
+  line-height: 1.65;
+  letter-spacing: -0.003em;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 0.5px;
+  transition: color 0.12s ease, text-decoration-thickness 0.12s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+}
+
+/* ---------------------------------------------------------------- */
+/* Site chrome                                                       */
+/* ---------------------------------------------------------------- */
+
+.site-header,
+.site-footer {
+  font-family: var(--font-sans);
+}
+
+.site-header {
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-rule);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in oklch, var(--color-paper) 88%, transparent);
+}
+
+.site-header-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.site-brand {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.25rem;
+  color: var(--color-ink-soft);
+}
+
+.site-nav a {
+  color: inherit;
+}
+
+.site-nav a:hover {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.site-footer {
+  border-top: 1px solid var(--color-rule);
+  margin-top: 4rem;
+}
+
+.site-footer-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem;
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.site-main {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 2rem;
+}
+
+.site-main-wide {
+  max-width: 86rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* Typography helpers                                                */
+/* ---------------------------------------------------------------- */
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+}
+
+.eyebrow a {
+  color: inherit;
+}
+
+/* ---------------------------------------------------------------- */
+/* Section page — three-column grid                                 */
+/*   left:   sections TOC (sticky)                                   */
+/*   center: section text                                            */
+/*   right:  amendment panel (sticky)                                */
+/* ---------------------------------------------------------------- */
+
+.section-layout {
+  display: grid;
+  grid-template-columns: minmax(13rem, 15rem) minmax(0, 42rem) minmax(16rem, 20rem);
+  gap: 2.5rem;
+  align-items: start;
+  justify-content: start;
+}
+
+.section-page {
+  min-width: 0;
+  max-width: 42rem;
+}
+
+/* On medium screens (1024–1280px), drop the left TOC under the content. */
+@media (max-width: 1280px) {
+  .section-layout {
+    grid-template-columns: minmax(0, 42rem) minmax(15rem, 19rem);
+  }
+  .act-toc {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    position: static !important;
+    max-height: none !important;
+    border-top: 1px solid var(--color-rule);
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+  }
+}
+
+/* On narrow screens, single column with rails stacked. */
+@media (max-width: 900px) {
+  .section-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .amend-panel {
+    position: static !important;
+    max-height: none !important;
+    border-top: 1px solid var(--color-rule);
+    padding-top: 1.25rem;
+    margin-top: 2rem;
+  }
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-header h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.4rem;
+  display: block;
+}
+
+.section-number {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.section-title-text {
+  display: block;
+}
+
+.section-meta {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-ink-faint);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.section-meta .separator {
+  color: var(--color-rule);
+}
+
+.status {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.18em 0.55em;
+  border-radius: 999px;
+  border: 1px solid var(--color-rule);
+}
+
+.status-original {
+  color: var(--color-ink-faint);
+}
+
+.status-amended {
+  color: var(--color-amend);
+  border-color: color-mix(in oklch, var(--color-amend) 35%, transparent);
+  background: var(--color-amend-very-soft);
+}
+
+.status-inserted {
+  color: var(--color-accent);
+  border-color: color-mix(in oklch, var(--color-accent) 35%, transparent);
+  background: var(--color-accent-soft);
+}
+
+.status-omitted {
+  color: var(--color-omit);
+  border-color: color-mix(in oklch, var(--color-omit) 35%, transparent);
+  background: var(--color-omit-soft);
+}
+
+/* ---------------------------------------------------------------- */
+/* Statute body — sub-sections, clauses, sub-clauses                */
+/* ---------------------------------------------------------------- */
+
+.section-body-wrap {
+  margin-top: 1rem;
+}
+
+.statute-body {
+  font-family: var(--font-serif);
+  font-size: 1.08rem;
+  line-height: 1.7;
+  color: var(--color-ink);
+}
+
+.statute-body .block {
+  margin: 0 0 0.85rem;
+  text-indent: 0;
+}
+
+/* Indentation per block class */
+.statute-body .lead {
+  margin-left: 0;
+}
+
+.statute-body .subsection {
+  margin-left: 0;
+}
+
+.statute-body .clause {
+  margin-left: 1.75rem;
+  position: relative;
+}
+
+.statute-body .subclause {
+  margin-left: 3.25rem;
+  position: relative;
+}
+
+.statute-body .proviso {
+  margin-left: 1.75rem;
+  font-style: italic;
+  color: var(--color-ink-soft);
+}
+
+.statute-body .proviso::first-letter,
+.statute-body .proviso::first-line {
+  font-style: italic;
+}
+
+.statute-body .explanation {
+  margin-left: 1.25rem;
+  color: var(--color-ink-soft);
+  border-left: 2px solid var(--color-rule);
+  padding-left: 0.85rem;
+}
+
+.statute-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Per-item heading inside multi-item documents (rules, regulations).
+   The heading sits above the item's body paragraphs. */
+.statute-body .statute-item {
+  scroll-margin-top: 5rem;
+  padding-top: 0.5rem;
+}
+
+.statute-body .statute-item + .statute-item {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+.statute-body .item-heading {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+  margin: 0 0 0.7rem;
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+}
+
+.statute-body .item-num {
+  color: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.statute-body .item-title {
+  color: var(--color-ink);
+}
+
+.statute-body .block-chapter {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.statute-body .statute-item:first-child {
+  padding-top: 0;
+}
+
+/* Soft hide for opener marker so visual hierarchy stays clean */
+.statute-body .clause::before,
+.statute-body .subclause::before {
+  /* Optional decoration; left blank for now to avoid double-marker */
+  content: "";
+}
+
+.section-body-wrap.is-historical .statute-body-historical:not([hidden])::before,
+.section-body-wrap.is-historical .statute-body-current:not([hidden])::before {
+  content: "Historical version — text as it stood on the selected date.";
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--color-amend);
+  background: var(--color-amend-very-soft);
+  border: 1px solid color-mix(in oklch, var(--color-amend) 25%, transparent);
+  border-radius: 4px;
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.not-yet-enacted {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  background: var(--color-quote-bg);
+  border: 1px dashed var(--color-rule);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  color: var(--color-ink-soft);
+}
+
+.historical-source-note {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+  margin: 0 0 1rem;
+  padding: 0.45rem 0.7rem;
+  background: var(--color-paper-warm);
+  border-left: 2px solid var(--color-rule);
+  border-radius: 0 3px 3px 0;
+}
+
+.statute-body .hidden-by-version {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- */
+/* Amendment indicators                                              */
+/* ---------------------------------------------------------------- */
+
+/* Inline amendment: subtle background + thin underline. Stays in flow. */
+.amend {
+  background: var(--color-amend-very-soft);
+  border-bottom: 1.5px solid color-mix(in oklch, var(--color-amend) 60%, transparent);
+  cursor: pointer;
+  border-radius: 1px;
+  padding: 0 1px;
+  transition: background 0.12s ease, border-color 0.12s ease;
+  /* Stay inline — no padding/margin that would break flow. */
+}
+
+.amend::after {
+  content: "✎";
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  line-height: 1;
+  vertical-align: super;
+  color: var(--color-amend);
+  margin-left: 1px;
+  opacity: 0.75;
+  transition: opacity 0.12s ease;
+}
+
+.amend:hover {
+  background: color-mix(in oklch, var(--color-amend) 18%, transparent);
+  border-bottom-color: var(--color-amend);
+}
+
+.amend:hover::after {
+  opacity: 1;
+}
+
+.amend.is-active {
+  background: color-mix(in oklch, var(--color-amend) 22%, transparent);
+  outline: 2px solid color-mix(in oklch, var(--color-amend) 50%, transparent);
+  outline-offset: 1px;
+}
+
+.amend.rolled-back {
+  background: color-mix(in oklch, var(--color-omit) 16%, transparent);
+  border-bottom-color: var(--color-omit);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklch, var(--color-omit) 70%, transparent);
+}
+
+.amend.rolled-back::after {
+  display: none;
+}
+
+/* Block-level amendment: when the entire paragraph IS one amendment, the
+   parser tags the span with `.amend-block` so we can render it as a block. */
+.amend.amend-block {
+  display: block;
+  background: var(--color-amend-very-soft);
+  border-bottom: none;
+  border-left: 3px solid var(--color-amend);
+  padding: 0.55rem 0.85rem 0.55rem 1rem;
+  margin: 0;
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+
+.amend.amend-block::after {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  margin: 0;
+  background: var(--color-amend);
+  color: white;
+  border-radius: 999px;
+  width: 1.3em;
+  height: 1.3em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65em;
+  vertical-align: baseline;
+  opacity: 1;
+}
+
+/* Tighten the surrounding p when its sole content is a block amendment. */
+.statute-body p:has(> .amend.amend-block) {
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------- */
+/* Section timeline (version picker)                                */
+/* ---------------------------------------------------------------- */
+
+.version-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--color-paper-warm);
+  border: 1px solid var(--color-rule);
+  border-radius: 8px;
+  margin: 0 0 1.5rem;
+  font-family: var(--font-sans);
+}
+
+.version-picker-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-weight: 500;
+  margin-right: 0.25rem;
+}
+
+.version-picker-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.version-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  padding: 0.32rem 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  background: transparent;
+  border: 1px solid var(--color-rule);
+  border-radius: 5px;
+  color: var(--color-ink-soft);
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.version-pill time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.version-pill-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-ink-faint);
+}
+
+.version-pill:hover {
+  background: var(--color-paper);
+  border-color: var(--color-ink-faint);
+}
+
+.version-pill[data-active="true"] {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.version-pill[data-active="true"] time,
+.version-pill[data-active="true"] .version-pill-label {
+  color: var(--color-paper);
+}
+
+/* ---------------------------------------------------------------- */
+/* Cross-references and section nav                                 */
+/* ---------------------------------------------------------------- */
+
+.cross-ref {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-rule);
+}
+
+.cross-ref h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  margin: 0 0 0.85rem;
+}
+
+.cross-ref h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin: 1.25rem 0 0.4rem;
+}
+
+.cross-ref ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cross-ref li {
+  padding: 0.32rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+}
+
+.cross-ref .ref-sections {
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+  margin-left: 0.4rem;
+}
+
+.section-nav {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-rule);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  font-family: var(--font-sans);
+}
+
+.section-nav a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 6px;
+  color: var(--color-ink);
+  text-decoration: none;
+  background: var(--color-paper);
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.section-nav a:hover {
+  border-color: var(--color-ink-faint);
+  background: var(--color-paper-warm);
+  text-decoration: none;
+}
+
+.section-nav .nav-direction {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.section-nav .nav-label {
+  font-size: 0.78rem;
+  color: var(--color-ink-soft);
+  font-weight: 500;
+}
+
+.section-nav .nav-title {
+  font-size: 0.95rem;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.section-nav .nav-next {
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------- */
+/* Notifications appendix                                           */
+/* ---------------------------------------------------------------- */
+
+aside.notifications {
+  margin-top: 2.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--color-quote-bg-warm);
+  border: 1px solid color-mix(in oklch, var(--color-amend) 18%, transparent);
+  border-radius: 6px;
+}
+
+aside.notifications h3 {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  margin: 0 0 0.6rem;
+}
+
+aside.notifications blockquote {
+  margin: 0 0 0.75rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+
+aside.notifications blockquote:last-child {
+  margin-bottom: 0;
+}
+
+.omitted-notice {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  background: var(--color-omit-soft);
+  border: 1px solid color-mix(in oklch, var(--color-omit) 25%, transparent);
+  color: var(--color-ink);
+  padding: 0.7rem 0.85rem;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* General "prose" pages — rules, regulations, amendments, landing  */
+/* ---------------------------------------------------------------- */
+
+.statute-prose {
+  max-width: 42rem;
+}
+
+.statute-prose h1 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 2rem;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.6rem;
+}
+
+.statute-prose h2 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  color: var(--color-ink-soft);
+  margin: 2.25rem 0 0.6rem;
+}
+
+.statute-prose h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-ink-soft);
+  margin: 1.5rem 0 0.4rem;
+}
+
+.statute-prose p {
+  margin: 0 0 1rem;
+}
+
+.statute-prose blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 2px solid var(--color-rule);
+  color: var(--color-ink-soft);
+  background: var(--color-quote-bg);
+  border-radius: 0 3px 3px 0;
+  padding-right: 0.85rem;
+}
+
+.statute-prose ol,
+.statute-prose ul {
+  padding-left: 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.statute-prose li {
+  margin-bottom: 0.4rem;
+}
+
+.statute-prose .metadata {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-ink-faint);
+  margin: 0 0 1.5rem;
+}
+
+/* ---------------------------------------------------------------- */
+/* Arrangement of Sections — Act TOC                                 */
+/* ---------------------------------------------------------------- */
+
+.arrangement {
+  max-width: 44rem;
+}
+
+.arrangement-chapter {
+  margin-bottom: 2rem;
+}
+
+.arrangement-chapter h2 {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.arrangement ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.arrangement li {
+  display: grid;
+  grid-template-columns: 4rem 1fr auto;
+  gap: 0.85rem;
+  align-items: baseline;
+  padding: 0.32rem 0;
+  font-size: 0.95rem;
+}
+
+.arrangement .sec-num {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.arrangement .sec-title a {
+  color: var(--color-ink);
+}
+
+.arrangement .sec-title a:hover {
+  color: var(--color-accent);
+}
+
+.arrangement .sec-status {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.1em 0.5em;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.arrangement .sec-status.amended {
+  color: var(--color-amend);
+  border-color: color-mix(in oklch, var(--color-amend) 40%, transparent);
+}
+
+.arrangement .sec-status.inserted {
+  color: var(--color-accent);
+  border-color: color-mix(in oklch, var(--color-accent) 40%, transparent);
+}
+
+.arrangement .sec-status.omitted {
+  color: var(--color-omit);
+  border-color: color-mix(in oklch, var(--color-omit) 40%, transparent);
+  text-decoration: line-through;
+}
+
+/* ---------------------------------------------------------------- */
+/* List pages (rules, regulations, amendments)                      */
+/* ---------------------------------------------------------------- */
+
+.instrument-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.instrument-list li {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--color-rule-soft);
+  font-family: var(--font-sans);
+}
+
+.instrument-list li:first-child {
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+.instrument-title {
+  font-size: 1rem;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.instrument-meta {
+  font-size: 0.82rem;
+  color: var(--color-ink-faint);
+  margin-top: 0.15rem;
+}
+
+.instrument-meta time {
+  font-variant-numeric: tabular-nums;
+}
+
+.instrument-amendment-count {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  color: var(--color-amend);
+  margin-left: 0.6rem;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------- */
+/* Left rail (Act TOC) and Right rail (Amendment panel)             */
+/* ---------------------------------------------------------------- */
+
+.act-toc,
+.amend-panel {
+  position: sticky;
+  top: 4.25rem;
+  align-self: start;
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  scrollbar-width: thin;
+}
+
+.act-toc {
+  padding-right: 0.5rem;
+}
+
+.amend-panel {
+  padding-left: 0.25rem;
+}
+
+.rail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.rail-title {
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-weight: 600;
+}
+
+.rail-count {
+  font-size: 0.74rem;
+  color: var(--color-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* TOC pane ----------------------------------------------------- */
+
+.rail-toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.rail-chapter {
+  border-bottom: 1px solid var(--color-rule-soft);
+  padding-bottom: 0.4rem;
+}
+
+.rail-chapter:last-child {
+  border-bottom: none;
+}
+
+.rail-chapter > summary {
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rail-chapter > summary::before {
+  content: "›";
+  font-size: 0.85rem;
+  color: var(--color-ink-faint);
+  transition: transform 0.12s ease;
+  font-weight: 400;
+}
+
+.rail-chapter[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.rail-chapter > summary::-webkit-details-marker {
+  display: none;
+}
+
+.rail-chapter ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.15rem 0 0.35rem 0.85rem;
+}
+
+/* Flat list (used for the rule + regulation TOC, where there are no
+   chapter-style groupings). */
+.rail-flat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.15rem 0 0;
+}
+
+/* Back-to-set link in SetItemsTOC */
+.rail-back-to-set {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-ink-soft);
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rail-back-to-set:hover {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.rail-back-to-set .rail-title {
+  font-size: 0.72rem;
+}
+
+.rail-subtitle {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  margin: 0.1rem 0 0.7rem;
+  line-height: 1.3;
+}
+
+.rail-chapter li {
+  margin: 0;
+}
+
+.rail-section-link {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.18rem 0.35rem;
+  border-radius: 3px;
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  line-height: 1.35;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.rail-section-link:hover {
+  background: var(--color-paper-warm);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.rail-section-link.is-current {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.rail-section-link.is-current .rail-sec-num,
+.rail-section-link.is-current .rail-sec-title {
+  color: var(--color-accent);
+}
+
+.rail-sec-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.74rem;
+  color: var(--color-ink-faint);
+}
+
+.rail-sec-title {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-sec-flag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  width: 1em;
+  text-align: center;
+}
+
+.rail-sec-flag.amended {
+  color: var(--color-amend);
+}
+
+.rail-sec-flag.inserted {
+  color: var(--color-accent);
+}
+
+.rail-sec-flag.omitted {
+  color: var(--color-omit);
+}
+
+/* Amendment panel (right column) -------------------------------- */
+
+.amend-panel-empty,
+.amend-panel-detail {
+  display: block;
+}
+
+.amend-panel[data-state="empty"] .amend-panel-detail,
+.amend-panel[data-state="detail"] .amend-panel-empty {
+  display: none;
+}
+
+.amend-panel-hint {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  line-height: 1.55;
+  margin: 0 0 1rem;
+}
+
+.amend-panel-legend {
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--color-rule-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.legend-marker {
+  display: inline-block;
+  width: 1.5rem;
+  height: 0.85em;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.amend-legend-inline {
+  background: var(--color-amend-very-soft);
+  border-bottom: 1.5px solid color-mix(in oklch, var(--color-amend) 60%, transparent);
+}
+
+.amend-legend-block {
+  background: var(--color-amend-very-soft);
+  border-left: 3px solid var(--color-amend);
+  border-radius: 0 2px 2px 0;
+}
+
+.amend-panel-close {
+  background: transparent;
+  border: 1px solid var(--color-rule);
+  border-radius: 3px;
+  padding: 0 0.4rem;
+  height: 1.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.amend-panel-close:hover {
+  color: var(--color-ink);
+  background: var(--color-paper-warm);
+  border-color: var(--color-ink-faint);
+}
+
+.amend-panel-content {
+  padding-top: 0.6rem;
+}
+
+.amend-panel-eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+
+.amend-panel-kind {
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.16em 0.55em;
+  border-radius: 999px;
+  background: var(--color-amend-very-soft);
+  color: var(--color-amend);
+}
+
+.amend-panel-kind[data-kind="omitted"] {
+  background: var(--color-omit-soft);
+  color: var(--color-omit);
+}
+
+.amend-panel-kind[data-kind="inserted"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.amend-panel-date-wrap {
+  color: var(--color-ink-faint);
+  font-size: 0.78rem;
+}
+
+.amend-panel-date-wrap time {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  font-weight: 500;
+}
+
+.amend-panel-by {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin: 0 0 0.4rem;
+}
+
+.amend-panel-target {
+  font-size: 0.78rem;
+  color: var(--color-ink-faint);
+  background: var(--color-paper-warm);
+  padding: 0.3rem 0.55rem;
+  border-radius: 3px;
+  margin: 0 0 0.7rem;
+}
+
+.amend-panel-block {
+  margin: 0.75rem 0;
+}
+
+.amend-panel-block h4 {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+  margin: 0 0 0.35rem;
+}
+
+.amend-panel-block blockquote {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  border-left: 2px solid var(--color-rule);
+  border-radius: 0 3px 3px 0;
+  color: var(--color-ink);
+  background: var(--color-quote-bg);
+}
+
+.amend-panel-before-block blockquote {
+  background: var(--color-omit-soft);
+  border-left-color: var(--color-omit);
+}
+
+.amend-panel-after-block blockquote {
+  background: var(--color-amend-very-soft);
+  border-left-color: var(--color-amend);
+}
+
+.amend-panel-note {
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  font-style: italic;
+  margin: 0.6rem 0 0;
+}
+
+.amend-panel-link-wrap {
+  margin: 1rem 0 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-rule-soft);
+}
+
+.amend-panel-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+}

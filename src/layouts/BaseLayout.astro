@@ -1,0 +1,57 @@
+---
+import "../styles/global.css";
+import { url, baseUrl } from "../utils/url";
+
+interface Props {
+  title: string;
+  description?: string;
+  wide?: boolean;
+}
+
+const { title, description, wide = false } = Astro.props;
+const fullTitle = title === "Aadhaar Statutes" ? title : `${title} — Aadhaar Statutes`;
+const path = Astro.url.pathname;
+
+function active(prefix: string) {
+  const full = url(prefix);
+  const home = baseUrl + "/";
+  if (prefix === "/" && (path === home || path === baseUrl)) return true;
+  if (prefix !== "/" && path.startsWith(full)) return true;
+  return false;
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href={url("/favicon.svg")} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body class="min-h-screen">
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a href={url("/")} class="site-brand">Aadhaar Statutes</a>
+        <nav class="site-nav">
+          <a href={url("/act")} aria-current={active("/act") ? "page" : undefined}>Act</a>
+          <a href={url("/amendments")} aria-current={active("/amendments") ? "page" : undefined}>Amendments</a>
+          <a href={url("/rules")} aria-current={active("/rules") ? "page" : undefined}>Rules</a>
+          <a href={url("/regulations")} aria-current={active("/regulations") ? "page" : undefined}>Regulations</a>
+          <a href={url("/search")} aria-current={active("/search") ? "page" : undefined}>Search</a>
+        </nav>
+      </div>
+    </header>
+    <main class={`site-main ${wide ? "site-main-wide" : ""}`}>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <span>Source documents: <a href="https://uidai.gov.in/en/about-uidai/legal-framework.html">uidai.gov.in</a></span>
+        <span>Not legal advice. Verify against the gazette.</span>
+      </div>
+    </footer>
+  </body>
+</html>
