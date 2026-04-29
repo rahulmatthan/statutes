@@ -1,5 +1,7 @@
 # Aadhaar Statutes
 
+**Live:** [exmachina.in/statutes](https://exmachina.in/statutes/)
+
 A navigable, cross-referenced edition of the **Aadhaar (Targeted Delivery of Financial and Other Subsidies, Benefits and Services) Act, 2016** and all rules and regulations made under it.
 
 For each section of the Act, the site shows:
