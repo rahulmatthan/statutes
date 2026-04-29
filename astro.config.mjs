@@ -9,7 +9,7 @@ import sitemap from '@astrojs/sitemap';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://exmachina.in',
-  base: '/statutes',
+  base: '/statutes/aadhaar',
   trailingSlash: 'ignore',
   integrations: [react(), mdx(), sitemap()],
 

@@ -1,6 +1,8 @@
 # Aadhaar Statutes
 
-**Live:** [exmachina.in/statutes](https://exmachina.in/statutes/)
+**Live:** [exmachina.in/statutes/aadhaar](https://exmachina.in/statutes/aadhaar/)
+
+Part of the [exmachina.in/statutes](https://exmachina.in/statutes/) portal.
 
 A navigable, cross-referenced edition of the **Aadhaar (Targeted Delivery of Financial and Other Subsidies, Benefits and Services) Act, 2016** and all rules and regulations made under it.
 

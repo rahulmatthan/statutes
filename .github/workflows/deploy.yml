@@ -1,4 +1,4 @@
-name: Build and deploy to exmachina.in/statutes
+name: Build and deploy to exmachina.in/statutes/aadhaar
 
 on:
   push:
@@ -25,21 +25,21 @@ jobs:
         run: npm run build
 
       # The apex domain (exmachina.in) is served by a separate repo. We push
-      # the built `dist/` into that repo's publish branch under `statutes/`,
-      # leaving everything else in that repo untouched.
+      # the built `dist/` into that repo's publish branch under
+      # `statutes/aadhaar/`, leaving everything else in that repo untouched.
       #
       # Auth: an ed25519 deploy key whose public half is registered (with
       # write access) on the apex repo, and whose private half is stored as
       # the secret APEX_DEPLOY_KEY in *this* repo's settings.
-      - name: Deploy /statutes into the apex repo
+      - name: Deploy /statutes/aadhaar into the apex repo
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.APEX_DEPLOY_KEY }}
           external_repository: rahulmatthan/rahulmatthan.github.io
           publish_branch: main
           publish_dir: ./dist
-          destination_dir: statutes
+          destination_dir: statutes/aadhaar
           keep_files: true
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: 'Deploy statutes from ${{ github.sha }}'
+          commit_message: 'Deploy statutes/aadhaar from ${{ github.sha }}'
